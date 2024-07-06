@@ -70,7 +70,7 @@ namespace YourNameSpace
 
 		public async Task<DeleteResult> RemoveVehicle(string vehicleId)
 		{
-			return await _vehicleCollection.DeleteOneAsync(Builders<Vehicle>.Filter.Eq(t => t.Id, vehicleId));
+			return await _vehicleCollection.DeleteOneAsync(Builders<Vehicle>.Filter.Eq(v => v.Id, vehicleId));
 		}
 	}
 }
