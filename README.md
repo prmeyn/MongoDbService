@@ -19,6 +19,13 @@ To include **MongoDbService** in your project, [install the NuGet package](https
 ```bash
 dotnet add package MongoDbService
 ```
+Then in your `appsettings.json` add the following sample configuration and change the values to your MongoDB instance.
+```json
+"MongoDbSettings": {
+  "MongoDatabaseName": "YourDatabaseName",
+  "ConnectionString": "mongodb+srv://.........@gpcluster.0bulb.mongodb.net/myDatabase?retryWrites=true&w=majority"
+}
+```
 
 ### GitHub Repository
 Visit our GitHub repository for the latest updates, documentation, and community contributions.
