@@ -4,6 +4,9 @@
 
 ## Features
 
+- Creates a collection called `ConnectionRecord` that keeps track of the number of compute instances that established a connection to your MongoDB instance.
+- Ensures that all your projects have a uniform way of reading your MongoDB configurations
+- Abstracts the code that is responsible for creating the connection to your MongoDB instance, so you can focus on your code having only the Business logic.
 
 
 ## Contributing
