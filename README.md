@@ -1,28 +1,33 @@
-# [MongoDbService](https://www.nuget.org/packages/MongoDbService)
+# MongoDbService
 
-**MongoDbService** is an open-source C# class library that provides a wrapper around the official MongoDB.Driver
+[![Release to Nuget](https://github.com/prmeyn/MongoDbService/actions/workflows/release.yml/badge.svg)](https://github.com/prmeyn/MongoDbService/actions/workflows/release.yml)
+[![NuGet](https://img.shields.io/nuget/v/MongoDbService.svg)](https://www.nuget.org/packages/MongoDbService)
+
+**MongoDbService** is an open-source C# class library that provides a wrapper around the official MongoDB.Driver, simplifying MongoDB integration in .NET applications.
 
 ## Features
 
-- Creates a collection called `ConnectionRecord` that keeps track of the number of compute instances that established a connection to your MongoDB instance.
-- Ensures that all your projects have a uniform way of reading your MongoDB configurations
-- Abstracts the code that is responsible for creating the connection to your MongoDB instance, so you can focus on your code having only the Business logic.
+- **Connection Tracking**: Creates a `ConnectionRecord` collection that keeps track of compute instances connecting to your MongoDB instance
+- **Standardized Configuration**: Ensures uniform MongoDB configuration across all your projects
+- **Simplified Integration**: Abstracts connection management so you can focus on business logic
 
+## Requirements
 
-## Contributing
+- .NET 8.0 or higher
+- MongoDB instance (local or cloud-based)
 
-We welcome contributions! If you find a bug, have an idea for improvement, please submit an issue or a pull request on GitHub.
+## Installation
 
-## Getting Started
-
-### [NuGet Package](https://www.nuget.org/packages/MongoDbService)
-
-To include **MongoDbService** in your project, [install the NuGet package](https://www.nuget.org/packages/MongoDbService):
+Install the [NuGet package](https://www.nuget.org/packages/MongoDbService):
 
 ```bash
 dotnet add package MongoDbService
 ```
-Then in your `appsettings.json` add the following sample configuration and change the values to mtch the details of your MongoDB instance.
+
+## Configuration
+
+Add the following to your `appsettings.json` and update the values to match your MongoDB instance:
+
 ```json
 "MongoDbSettings": {
   "DatabaseName": "YourDatabaseName",
@@ -30,12 +35,20 @@ Then in your `appsettings.json` add the following sample configuration and chang
 }
 ```
 
-After the above is done, you can just Dependency inject the `MongoService` in your C# class.
+**Configuration Options:**
+- `DatabaseName` (required): The name of your MongoDB database
+- `ConnectionString` (required): Your MongoDB connection string
 
-#### For example:
-Lets say your had a DTO to represent a record of an `IMongoCollection` called `Vehicle`
+## Usage
+
+Inject `MongoService` into your classes via dependency injection:
+
+### Example: Vehicle Management
+
+**1. Define your DTO:**
+
 ```csharp
-﻿using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace YourNameSpace
 {
@@ -43,50 +56,84 @@ namespace YourNameSpace
     {
         [BsonId]
         public required string Id { get; init; }
-        public required string  Name { get; set; }
+        public required string Name { get; set; }
     }
 }
 ```
 
-Then you could have another class called `VehicleHandler` to add and remove `Vehicle` instances as follows:
+**2. Create a handler class:**
+
 ```csharp
 using MongoDB.Driver;
 using MongoDbService;
 
 namespace YourNameSpace
 {
-	public sealed class VehicleHandler
-	{
-		private IMongoCollection<Vehicle> _vehicleCollection;
+    public sealed class VehicleHandler
+    {
+        private readonly IMongoCollection<Vehicle> _vehicleCollection;
 
-		public VehicleHandler(
-			MongoService mongoService
-		)
-		{
-        _vehicleCollection = mongoService.Database.GetCollection<Vehicle>(nameof(Vehicle), new MongoCollectionSettings() { ReadConcern = ReadConcern.Majority, WriteConcern = WriteConcern.WMajority });
-		}
+        public VehicleHandler(MongoService mongoService)
+        {
+            _vehicleCollection = mongoService.Database.GetCollection<Vehicle>(
+                nameof(Vehicle), 
+                new MongoCollectionSettings() 
+                { 
+                    ReadConcern = ReadConcern.Majority, 
+                    WriteConcern = WriteConcern.WMajority 
+                });
+        }
 
-		public async Task AddVehicle(string vehicleName)
-		{
-			await _vehicleCollection.InsertOneAsync(new Vehicle() { Id = Guid.NewGuid().ToString(), Name = vehicleName });
-		}
+        public async Task AddVehicle(string vehicleName)
+        {
+            await _vehicleCollection.InsertOneAsync(
+                new Vehicle() 
+                { 
+                    Id = Guid.NewGuid().ToString(), 
+                    Name = vehicleName 
+                });
+        }
 
-		public async Task<DeleteResult> RemoveVehicle(string vehicleId)
-		{
-			return await _vehicleCollection.DeleteOneAsync(Builders<Vehicle>.Filter.Eq(v => v.Id, vehicleId));
-		}
-	}
+        public async Task<DeleteResult> RemoveVehicle(string vehicleId)
+        {
+            return await _vehicleCollection.DeleteOneAsync(
+                Builders<Vehicle>.Filter.Eq(v => v.Id, vehicleId));
+        }
+    }
 }
 ```
-### GitHub Repository
-Visit our GitHub repository for the latest updates, documentation, and community contributions.
-https://github.com/prmeyn/MongoDbService
 
+## Testing
+
+The project includes integration tests that require a running MongoDB instance.
+
+### Running Tests Locally
+
+1. Ensure MongoDB is running on `localhost:27017` (or set the `MONGODB_CONNECTION_STRING` environment variable)
+2. Run the tests:
+
+```bash
+dotnet test
+```
+
+### CI/CD
+
+The GitHub Actions workflow automatically runs tests against a MongoDB container on every release.
+
+## Contributing
+
+We welcome contributions! If you find a bug or have an idea for improvement, please submit an issue or pull request on [GitHub](https://github.com/prmeyn/MongoDbService).
+
+## Links
+
+- [NuGet Package](https://www.nuget.org/packages/MongoDbService)
+- [GitHub Repository](https://github.com/prmeyn/MongoDbService)
 
 ## License
 
-This project is licensed under the GNU GENERAL PUBLIC LICENSE.
+This project is licensed under the GNU General Public License v3.0.
+
+---
 
 Happy coding! 🚀🌐📚
-
 
