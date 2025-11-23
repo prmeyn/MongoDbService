@@ -25,7 +25,7 @@ dotnet add package MongoDbService
 Then in your `appsettings.json` add the following sample configuration and change the values to mtch the details of your MongoDB instance.
 ```json
 "MongoDbSettings": {
-  "MongoDatabaseName": "YourDatabaseName",
+  "DatabaseName": "YourDatabaseName",
   "ConnectionString": "mongodb+srv://.........@gpcluster.0bulb.mongodb.net/myDatabase?retryWrites=true&w=majority"
 }
 ```
