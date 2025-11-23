@@ -8,7 +8,7 @@ namespace MongoDbService
 	public sealed class MongoService
 	{
 		private readonly MongoDbSettings _mongoDbSettings;
-		public readonly string MongoDatabaseName;
+		public readonly string DatabaseName;
 		public readonly MongoClient MongoClient;
 
 		public MongoService(IConfiguration configuration, ILogger<MongoService> logger) 
@@ -22,17 +22,17 @@ namespace MongoDbService
 				throw new ArgumentException("MongoDbSettings:ConnectionString missing.");
 			}
 
-			MongoDatabaseName = mongoDbSettings["MongoDatabaseName"];
-			if (string.IsNullOrWhiteSpace(MongoDatabaseName))
+			DatabaseName = mongoDbSettings["DatabaseName"];
+			if (string.IsNullOrWhiteSpace(DatabaseName))
 			{
-				MongoDatabaseName = $"Untitled-MongoDbService";
-				logger.LogWarning($"MongoDbSettings:MongoDatabaseName missing, falling back to {MongoDatabaseName}");
+				DatabaseName = $"Untitled-MongoDbService";
+				logger.LogWarning($"MongoDbSettings:DatabaseName missing, falling back to {DatabaseName}");
 			}
 
 			_mongoDbSettings = new MongoDbSettings()
 			{
 				MongoDbConnectionString = mongoDbConnectionString,
-				MongoDatabaseName = MongoDatabaseName
+				DatabaseName = DatabaseName
 			};
 
 			MongoClient = new MongoClient(mongoDbConnectionString);
@@ -46,6 +46,6 @@ namespace MongoDbService
 				ConnectionDateTimeOffset = DateTimeOffset.UtcNow
 			});
 		}
-		public IMongoDatabase Database => MongoClient.GetDatabase(_mongoDbSettings.MongoDatabaseName);
+		public IMongoDatabase Database => MongoClient.GetDatabase(_mongoDbSettings.DatabaseName);
 	}
 }

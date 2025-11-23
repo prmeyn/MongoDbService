@@ -11,6 +11,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -20,6 +25,10 @@ jobs:
         git branch --remote --contains | grep origin/main
     - name: Set VERSION variable from tag
       run: echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
+    - name: Test
+      run: dotnet test --configuration Release
+      env:
+        MONGODB_CONNECTION_STRING: mongodb://localhost:27017
     - name: Build
       run: dotnet build --configuration Release /p:Version=${VERSION}
     - name: Pack
