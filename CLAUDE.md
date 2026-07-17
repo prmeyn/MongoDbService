@@ -16,7 +16,7 @@ MongoDbService is a small open-source C# class library wrapping the official Mon
 ## Architecture
 
 - Two projects wired by `MongoDbService.sln`: the library (`MongoDbService/`) and its integration tests (`MongoDbService.Tests/`), which references the library via `ProjectReference`.
-- Core type is `MongoService` (`MongoDbService/MongoService.cs`), a sealed class registered as a DI singleton via the `AddMongoDbServices(this IServiceCollection)` extension in `SeviceCollectionExtensions.cs`. That filename/class has a typo (missing "r" in "Sevice") — it's already shipped as public API in released NuGet versions, so treat renaming it as a breaking change, not a typo fix.
+- Core type is `MongoService` (`MongoDbService/MongoService.cs`), a sealed class registered as a DI singleton via the `AddMongoDbServices(this IServiceCollection)` extension in `ServiceCollectionExtensions.cs`.
 - `MongoService`'s constructor reads the `MongoDbSettings` config section via `IConfiguration`:
   - `ConnectionString` — required; throws `ArgumentException` if missing/blank.
   - `DatabaseName` — optional; falls back to `"Untitled-MongoDbService"` with a logged warning if missing/blank.

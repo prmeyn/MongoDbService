@@ -21,7 +21,7 @@ namespace MongoDbService
 				throw new ArgumentException("MongoDbSettings:ConnectionString missing.");
 			}
 
-			DatabaseName = mongoDbSettings["DatabaseName"];
+			DatabaseName = mongoDbSettings["DatabaseName"] ?? string.Empty;
 			if (string.IsNullOrWhiteSpace(DatabaseName))
 			{
 				DatabaseName = "Untitled-MongoDbService";
