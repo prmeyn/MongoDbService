@@ -2,7 +2,7 @@
 
 namespace MongoDbService
 {
-	public static class SeviceCollectionExtensions
+	public static class ServiceCollectionExtensions
 	{
 		public static void AddMongoDbServices(this IServiceCollection services)
 		{

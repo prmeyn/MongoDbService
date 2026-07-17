@@ -6,12 +6,18 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Description>A lightweight wrapper around the official MongoDB.Driver that simplifies MongoDB integration in .NET applications, with built-in DI registration and connection tracking.</Description>
+    <Authors>prmeyn</Authors>
+    <PackageProjectUrl>https://github.com/prmeyn/MongoDbService</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/prmeyn/MongoDbService</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>mongodb;mongo;dotnet;dependency-injection</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
-    <PackageReference Include="MongoDB.Driver" Version="3.5.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" />
+    <PackageReference Include="MongoDB.Driver" Version="3.10.0" />
 	
 	<None Include="../LICENSE" Pack="true" PackagePath="\" />
 	<None Include="../README.md" Pack="true" PackagePath="\" />

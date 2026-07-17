@@ -13,7 +13,7 @@
 
 ## Requirements
 
-- .NET 8.0 or higher
+- .NET 10.0
 - MongoDB instance (local or cloud-based)
 
 ## Installation
@@ -36,8 +36,8 @@ Add the following to your `appsettings.json` and update the values to match your
 ```
 
 **Configuration Options:**
-- `DatabaseName` (required): The name of your MongoDB database
-- `ConnectionString` (required): Your MongoDB connection string
+- `DatabaseName` (optional): The name of your MongoDB database. Falls back to `Untitled-MongoDbService` with a warning if omitted.
+- `ConnectionString` (required): Your MongoDB connection string. Throws if omitted.
 
 ## Usage
 
