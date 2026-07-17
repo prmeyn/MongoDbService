@@ -7,11 +7,10 @@ namespace MongoDbService
 {
 	public sealed class MongoService
 	{
-		private readonly MongoDbSettings _mongoDbSettings;
 		public readonly string DatabaseName;
 		public readonly MongoClient MongoClient;
 
-		public MongoService(IConfiguration configuration, ILogger<MongoService> logger) 
+		public MongoService(IConfiguration configuration, ILogger<MongoService> logger)
 		{
 			var mongoDbSettings = configuration.GetSection("MongoDbSettings");
 
@@ -25,27 +24,33 @@ namespace MongoDbService
 			DatabaseName = mongoDbSettings["DatabaseName"];
 			if (string.IsNullOrWhiteSpace(DatabaseName))
 			{
-				DatabaseName = $"Untitled-MongoDbService";
+				DatabaseName = "Untitled-MongoDbService";
 				logger.LogWarning($"MongoDbSettings:DatabaseName missing, falling back to {DatabaseName}");
 			}
-
-			_mongoDbSettings = new MongoDbSettings()
-			{
-				MongoDbConnectionString = mongoDbConnectionString,
-				DatabaseName = DatabaseName
-			};
 
 			MongoClient = new MongoClient(mongoDbConnectionString);
 
 			var connectionCollection = Database.GetCollection<ConnectionRecord>(nameof(ConnectionRecord), new MongoCollectionSettings() { ReadConcern = ReadConcern.Majority, WriteConcern = WriteConcern.WMajority });
 
-			_ = connectionCollection.InsertOneAsync(new ConnectionRecord()
-			{
-				Id = Guid.NewGuid().ToString(),
-				EnvironmentMachineName = Environment.MachineName,
-				ConnectionDateTimeOffset = DateTimeOffset.UtcNow
-			});
+			_ = RecordConnectionAsync(connectionCollection, logger);
 		}
-		public IMongoDatabase Database => MongoClient.GetDatabase(_mongoDbSettings.DatabaseName);
+		public IMongoDatabase Database => MongoClient.GetDatabase(DatabaseName);
+
+		private static async Task RecordConnectionAsync(IMongoCollection<ConnectionRecord> connectionCollection, ILogger<MongoService> logger)
+		{
+			try
+			{
+				await connectionCollection.InsertOneAsync(new ConnectionRecord()
+				{
+					Id = Guid.NewGuid().ToString(),
+					EnvironmentMachineName = Environment.MachineName,
+					ConnectionDateTimeOffset = DateTimeOffset.UtcNow
+				});
+			}
+			catch (Exception ex)
+			{
+				logger.LogWarning(ex, "Failed to record MongoDbService connection.");
+			}
+		}
 	}
 }
