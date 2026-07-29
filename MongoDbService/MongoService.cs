@@ -5,7 +5,7 @@ using MongoDbService.DTOs;
 
 namespace MongoDbService
 {
-	public sealed class MongoService
+	public sealed class MongoService : IDisposable
 	{
 		private const int DefaultConnectionRecordRetentionDays = 30;
 		private const string ConnectionRecordExpiryIndexName = "ConnectionRecord_ttl";
@@ -50,6 +50,8 @@ namespace MongoDbService
 		/// the write lands and the record is lost.
 		/// </summary>
 		public Task ConnectionRecorded { get; }
+
+		public void Dispose() => MongoClient.Dispose();
 
 		private static int ReadRetentionDays(IConfigurationSection mongoDbSettings, ILogger<MongoService> logger)
 		{
