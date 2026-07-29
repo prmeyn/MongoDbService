@@ -7,7 +7,7 @@
 
 ## Features
 
-- **Connection Tracking**: Creates a `ConnectionRecord` collection that keeps track of compute instances connecting to your MongoDB instance
+- **Connection Tracking**: Creates a `ConnectionRecord` collection that keeps track of compute instances connecting to your MongoDB instance, expiring old records via a TTL index
 - **Standardized Configuration**: Ensures uniform MongoDB configuration across all your projects
 - **Simplified Integration**: Abstracts connection management so you can focus on business logic
 
@@ -31,13 +31,15 @@ Add the following to your `appsettings.json` and update the values to match your
 ```json
 "MongoDbSettings": {
   "DatabaseName": "YourDatabaseName",
-  "ConnectionString": "mongodb+srv://.........@gpcluster.0bulb.mongodb.net/myDatabase?retryWrites=true&w=majority"
+  "ConnectionString": "mongodb+srv://<user>:<password>@<cluster>.mongodb.net/<database>?retryWrites=true&w=majority",
+  "ConnectionRecordRetentionDays": 30
 }
 ```
 
 **Configuration Options:**
 - `DatabaseName` (optional): The name of your MongoDB database. Falls back to `Untitled-MongoDbService` with a warning if omitted.
 - `ConnectionString` (required): Your MongoDB connection string. Throws if omitted.
+- `ConnectionRecordRetentionDays` (optional): How long connection-tracking records are kept, enforced by a TTL index. Defaults to `30`. Set to `0` or below to keep them indefinitely.
 
 ## Usage
 
@@ -102,6 +104,16 @@ namespace YourNameSpace
     }
 }
 ```
+
+### Short-lived processes
+
+The connection-tracking write is started in the background so it never delays or breaks startup. In a long-running host there is nothing to do. In a short-lived process — a console app, CLI, or function that exits quickly — the process can terminate before the write lands, so await it before returning:
+
+```csharp
+await mongoService.ConnectionRecorded;
+```
+
+`ConnectionRecorded` never faults; a failed write is logged as a warning, so it needs no `try`/`catch`.
 
 ## Testing
 
