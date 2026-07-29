@@ -29,12 +29,13 @@ namespace MongoDbService
 			}
 
 			MongoClient = new MongoClient(mongoDbConnectionString);
+			Database = MongoClient.GetDatabase(DatabaseName);
 
 			var connectionCollection = Database.GetCollection<ConnectionRecord>(nameof(ConnectionRecord), new MongoCollectionSettings() { ReadConcern = ReadConcern.Majority, WriteConcern = WriteConcern.WMajority });
 
 			_ = RecordConnectionAsync(connectionCollection, logger);
 		}
-		public IMongoDatabase Database => MongoClient.GetDatabase(DatabaseName);
+		public IMongoDatabase Database { get; }
 
 		private static async Task RecordConnectionAsync(IMongoCollection<ConnectionRecord> connectionCollection, ILogger<MongoService> logger)
 		{
