@@ -7,8 +7,8 @@ namespace MongoDbService
 {
 	public sealed class MongoService
 	{
-		public readonly string DatabaseName;
-		public readonly MongoClient MongoClient;
+		public string DatabaseName { get; }
+		public MongoClient MongoClient { get; }
 
 		public MongoService(IConfiguration configuration, ILogger<MongoService> logger)
 		{
