@@ -2,7 +2,7 @@
 
 namespace MongoDbService.DTOs
 {
-	public class ConnectionRecord
+	public sealed class ConnectionRecord
 	{
 		[BsonId]
 		public required string Id { get; init; }
