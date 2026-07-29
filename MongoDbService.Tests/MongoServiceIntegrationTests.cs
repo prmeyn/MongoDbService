@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDbService.DTOs;
 
 namespace MongoDbService.Tests;
 
@@ -37,10 +38,10 @@ public class MongoServiceIntegrationTests
             const int expectedValue = 123;
             var collection = mongoService.Database.GetCollection<BsonDocument>("IntegrationTestCollection");
             var testDoc = new BsonDocument { { "Name", "TestItem" }, { "Value", expectedValue } };
-            await collection.InsertOneAsync(testDoc);
+            await collection.InsertOneAsync(testDoc, cancellationToken: TestContext.Current.CancellationToken);
 
             // 3. Retrieve Data
-            var retrievedDoc = await collection.Find(new BsonDocument("Name", "TestItem")).FirstOrDefaultAsync();
+            var retrievedDoc = await collection.Find(new BsonDocument("Name", "TestItem")).FirstOrDefaultAsync(TestContext.Current.CancellationToken);
 
             // Assert
             Assert.NotNull(retrievedDoc);
@@ -49,7 +50,57 @@ public class MongoServiceIntegrationTests
         finally
         {
             // Cleanup: Drop the database
-            await mongoService.MongoClient.DropDatabaseAsync("TestDatabase");
+            await mongoService.MongoClient.DropDatabaseAsync("TestDatabase", TestContext.Current.CancellationToken);
+        }
+    }
+
+    [Fact]
+    public async Task Should_Record_Connection_On_Construction()
+    {
+        // Arrange: a dedicated database, since the assertions below inspect the
+        // ConnectionRecord collection that every MongoService construction writes to.
+        var connectionString = Environment.GetEnvironmentVariable("MONGODB_CONNECTION_STRING")
+                               ?? "mongodb://localhost:27017";
+        const string databaseName = "TestDatabase_ConnectionTracking";
+
+        var inMemorySettings = new Dictionary<string, string> {
+            {"MongoDbSettings:ConnectionString", connectionString},
+            {"MongoDbSettings:DatabaseName", databaseName}
+        };
+
+        IConfiguration configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(inMemorySettings!)
+            .Build();
+
+        var mongoService = new MongoService(configuration, NullLogger<MongoService>.Instance);
+
+        try
+        {
+            // Act: the write is fire-and-forget from the constructor, so await the task
+            // that makes it observable. It is contractually non-faulting.
+            await mongoService.ConnectionRecorded;
+
+            // Assert: the record for this machine actually landed.
+            var records = mongoService.Database.GetCollection<ConnectionRecord>(nameof(ConnectionRecord));
+            var record = await records
+                .Find(Builders<ConnectionRecord>.Filter.Eq(r => r.EnvironmentMachineName, Environment.MachineName))
+                .FirstOrDefaultAsync(TestContext.Current.CancellationToken);
+
+            Assert.NotNull(record);
+            Assert.False(string.IsNullOrWhiteSpace(record.Id));
+            Assert.InRange(record.ConnectionDateTimeOffset, DateTimeOffset.UtcNow.AddMinutes(-5), DateTimeOffset.UtcNow.AddMinutes(1));
+
+            // Assert: the TTL index exists, so the collection cannot grow without bound.
+            var indexCursor = await records.Indexes.ListAsync(TestContext.Current.CancellationToken);
+            var indexes = await indexCursor.ToListAsync(TestContext.Current.CancellationToken);
+            var ttlIndex = indexes.SingleOrDefault(i => i["name"].AsString == "ConnectionRecord_ttl");
+
+            Assert.NotNull(ttlIndex);
+            Assert.Equal(TimeSpan.FromDays(30).TotalSeconds, ttlIndex["expireAfterSeconds"].ToDouble());
+        }
+        finally
+        {
+            await mongoService.MongoClient.DropDatabaseAsync(databaseName, TestContext.Current.CancellationToken);
         }
     }
 
@@ -69,18 +120,16 @@ public class MongoServiceIntegrationTests
         var logger = new RecordingLogger<MongoService>();
 
         // Act
-        var exception = Record.Exception(() => new MongoService(configuration, logger));
+        MongoService? mongoService = null;
+        var exception = Record.Exception(() => mongoService = new MongoService(configuration, logger));
 
         // Assert: construction itself never throws, even though the tracking write is doomed to fail.
         Assert.Null(exception);
+        Assert.NotNull(mongoService);
 
-        // The tracking write is fire-and-forget, so give it a moment to fail and get logged
-        // instead of being silently swallowed.
-        var deadline = DateTime.UtcNow.AddSeconds(5);
-        while (DateTime.UtcNow < deadline && !logger.HasWarningWithException)
-        {
-            await Task.Delay(50);
-        }
+        // ConnectionRecorded is contractually non-faulting, so awaiting it needs no
+        // try/catch and settles the tracking write deterministically.
+        await mongoService.ConnectionRecorded;
 
         Assert.True(logger.HasWarningWithException, "Expected the failed connection-tracking write to be logged as a warning.");
     }
