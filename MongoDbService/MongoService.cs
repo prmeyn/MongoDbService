@@ -35,9 +35,18 @@ namespace MongoDbService
 			// write available rather than blocking on a majority acknowledgement.
 			var connectionCollection = Database.GetCollection<ConnectionRecord>(nameof(ConnectionRecord), new MongoCollectionSettings() { ReadConcern = ReadConcern.Local, WriteConcern = WriteConcern.Acknowledged });
 
-			_ = RecordConnectionAsync(connectionCollection, logger);
+			ConnectionRecorded = RecordConnectionAsync(connectionCollection, logger);
 		}
 		public IMongoDatabase Database { get; }
+
+		/// <summary>
+		/// Completes when the startup connection-tracking write has finished. Never
+		/// faults: a failed write is logged as a warning and swallowed, so awaiting
+		/// this is always safe. Short-lived processes (console apps, CLIs, functions)
+		/// should await it before exiting, otherwise the process can terminate before
+		/// the write lands and the record is lost.
+		/// </summary>
+		public Task ConnectionRecorded { get; }
 
 		private static async Task RecordConnectionAsync(IMongoCollection<ConnectionRecord> connectionCollection, ILogger<MongoService> logger)
 		{
@@ -49,6 +58,8 @@ namespace MongoDbService
 					EnvironmentMachineName = Environment.MachineName,
 					ConnectionDateTimeOffset = DateTimeOffset.UtcNow
 				});
+
+				logger.LogDebug("Recorded MongoDbService connection for {EnvironmentMachineName}.", Environment.MachineName);
 			}
 			catch (Exception ex)
 			{
