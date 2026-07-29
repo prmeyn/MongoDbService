@@ -25,7 +25,7 @@ namespace MongoDbService
 			if (string.IsNullOrWhiteSpace(DatabaseName))
 			{
 				DatabaseName = "Untitled-MongoDbService";
-				logger.LogWarning($"MongoDbSettings:DatabaseName missing, falling back to {DatabaseName}");
+				logger.LogWarning("MongoDbSettings:DatabaseName missing, falling back to {DatabaseName}", DatabaseName);
 			}
 
 			MongoClient = new MongoClient(mongoDbConnectionString);
