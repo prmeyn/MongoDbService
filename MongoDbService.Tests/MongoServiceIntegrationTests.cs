@@ -37,10 +37,10 @@ public class MongoServiceIntegrationTests
             const int expectedValue = 123;
             var collection = mongoService.Database.GetCollection<BsonDocument>("IntegrationTestCollection");
             var testDoc = new BsonDocument { { "Name", "TestItem" }, { "Value", expectedValue } };
-            await collection.InsertOneAsync(testDoc);
+            await collection.InsertOneAsync(testDoc, cancellationToken: TestContext.Current.CancellationToken);
 
             // 3. Retrieve Data
-            var retrievedDoc = await collection.Find(new BsonDocument("Name", "TestItem")).FirstOrDefaultAsync();
+            var retrievedDoc = await collection.Find(new BsonDocument("Name", "TestItem")).FirstOrDefaultAsync(TestContext.Current.CancellationToken);
 
             // Assert
             Assert.NotNull(retrievedDoc);
@@ -49,7 +49,7 @@ public class MongoServiceIntegrationTests
         finally
         {
             // Cleanup: Drop the database
-            await mongoService.MongoClient.DropDatabaseAsync("TestDatabase");
+            await mongoService.MongoClient.DropDatabaseAsync("TestDatabase", TestContext.Current.CancellationToken);
         }
     }
 
@@ -79,7 +79,7 @@ public class MongoServiceIntegrationTests
         var deadline = DateTime.UtcNow.AddSeconds(5);
         while (DateTime.UtcNow < deadline && !logger.HasWarningWithException)
         {
-            await Task.Delay(50);
+            await Task.Delay(50, TestContext.Current.CancellationToken);
         }
 
         Assert.True(logger.HasWarningWithException, "Expected the failed connection-tracking write to be logged as a warning.");
