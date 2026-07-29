@@ -31,7 +31,9 @@ namespace MongoDbService
 			MongoClient = new MongoClient(mongoDbConnectionString);
 			Database = MongoClient.GetDatabase(DatabaseName);
 
-			var connectionCollection = Database.GetCollection<ConnectionRecord>(nameof(ConnectionRecord), new MongoCollectionSettings() { ReadConcern = ReadConcern.Majority, WriteConcern = WriteConcern.WMajority });
+			// Connection tracking is diagnostic, so it takes the cheapest durable
+			// write available rather than blocking on a majority acknowledgement.
+			var connectionCollection = Database.GetCollection<ConnectionRecord>(nameof(ConnectionRecord), new MongoCollectionSettings() { ReadConcern = ReadConcern.Local, WriteConcern = WriteConcern.Acknowledged });
 
 			_ = RecordConnectionAsync(connectionCollection, logger);
 		}
