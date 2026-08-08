@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	<PackageLicenseFile>LICENSE</PackageLicenseFile>
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>
 	<PackageReadmeFile>README.md</PackageReadmeFile>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
